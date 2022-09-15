@@ -5,8 +5,6 @@ using namespace std;
 
 int f(int n);
 int main(){
-    ios_base::sync_with_stdio(false); cin.tie(NULL); cout.tie(NULL);
-
     int n, test_num;
     long long dp[MAX] ={0, };
     long long sum[MAX] ={0, };
