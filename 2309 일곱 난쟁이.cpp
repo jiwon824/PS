@@ -21,13 +21,12 @@ int main(){
     //9명 중 2명을 선택
     for (int i=0;i<9;i++){
         for (int j=i+1;j<9;j++){
-            //합이 100이 되는 수를 찾으면 i, j번째 원소 삭제
             if (sum-(dwarf[i]+dwarf[j])==100){
                 for (int k=0;k<9;k++){
                     if (i==k||j==k) continue;
                     cout << dwarf[k] << '\n';
                 }
-                return 0;
+                return 0;//정답이 여러 개인 경우 하나의 답안만 제출하고 프로그램을 종료하기 위해
             }
         }
     }
