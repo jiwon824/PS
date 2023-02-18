@@ -12,7 +12,6 @@ struct coordinate{
 int N, M;
 int map[MAX][MAX];
 bool visited[MAX][MAX];
-int answer=0;
 // 우, 하, 좌, 상
 // https://ldgeao99.tistory.com/400
 // (-1, -1) (-1, 0) (-1, 1)
