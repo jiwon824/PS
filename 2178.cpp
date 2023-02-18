@@ -11,7 +11,6 @@ struct coordinate{
 
 int N, M;
 int map[MAX][MAX];
-bool visited[MAX][MAX];
 // 우, 하, 좌, 상
 // https://ldgeao99.tistory.com/400
 // (-1, -1) (-1, 0) (-1, 1)
@@ -39,7 +38,6 @@ int main(){
         cin >> MString;
         for(int j=0; j<M; j++){
             map[i][j]= MString[j]-'0';
-            visited[i][j]=0; // visited 배열 0으로 초기화
         }
     }
 
