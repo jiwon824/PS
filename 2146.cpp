@@ -1,19 +1,20 @@
-// https://jaimemin.tistory.com/655
 #include <iostream>
+#include <vector>
+#include <algorithm> 
 #include <queue>
-#include <algorithm>
-#include <cstring> //memset
 
-#define MAX 1001
+#define MAX 101
 using namespace std;
 
 struct coordinate{
-    int x, y;
+    int y, x;
 };
 
-int N, ans;
 int map[MAX][MAX];
-bool visited[MAX][MAX];
+int N =0;
+int ans =2e9; //1e9=1*10^9, 2e9=2*10^9 특히, 2e9는 int 범위내에서 무한대 값을 나타내기 위해 사용하는 경우가 많다.
+vector<coordinate> v; // 섬의 모서리를 넣을 벡터
+
 // 우, 하, 좌, 상
 // https://ldgeao99.tistory.com/400
 // (-1, -1) (-1, 0) (-1, 1)
@@ -22,12 +23,18 @@ bool visited[MAX][MAX];
 int dx[4] = { 1, 0, -1, 0 };
 int dy[4] = { 0, 1, 0 , -1 };
 
-
-// DFS로 섬에 번호를 붙여주는 작업 
-void Make_LandLabel(int x, int y, int label);
-// BFS로 최단 거리를 구함
-int BFS(int label);
+void input();
+void land_label(int y, int x, int label);
+void distance();
 int main(){
+    ios_base::sync_with_stdio(false); cin.tie(NULL); cout.tie(NULL);
+    input();
+    distance();
+    cout << ans << "\n";
+    return 0;
+}
+
+void input(){
     // 이 나라는 N×N크기의 이차원 평면상에 존재한다.
     // 첫 줄에는 지도의 크기 N(100이하의 자연수)가 주어진다.
     cin >> N;
@@ -36,93 +43,76 @@ int main(){
     for(int i=0;i<N;i++){
         for (int j=0; j<N; j++){
             cin >> map[i][j];
-        }
-    }
-    
-    // 섬에 번호 붙여주기 -> 각 섬을 구분
-    int label=1;
-    for (int i=0;i<N;i++){
-        for (int j=0; j<N; j++){
-            // map[i][j]==1 && visited[i][j]==0
-            if(map[i][j] && !visited[i][j]){
-                // 다른 섬이 있는지 체크(있다면 다음 번호 붙여주기)
-                Make_LandLabel(i, j, label++);
-            }
+            // 1로 입력되는 땅을 -1로 넣어준다(섬 라벨링을 위해)
+            if (map[i][j]!=0) map[i][j] = -1;
         }
     }
 
-    // 최단거리를 구해야해서 min을 써야 하니까 큰 수로 초기화 해줘야 함
-    ans=987654321;
-    // 각 섬에서 제일 가까운 섬까지의 최단거리 구하기
-    for (int i=1; i<label; i++){
-        // BFS해야 하니까 방문기록 초기화해주기
-        memset(visited, 0, sizeof(visited));
-        ans = min(ans, BFS(i));
-    }
-    cout << ans << '\n';
-    
-    return 0;
-}
-
-// DFS로 섬에 번호 붙여주기: BFS로 하는 방법도 있던데 그것도 나중에 해보기
-void Make_LandLabel(int x, int y, int label){
-    visited[x][y]=1;
-    map[x][y]=label;
-
-    // 상하좌우 살피면서 이 섬에 방문하지 않은 땅이 있는지 체크
-    for(int i=0; i<4; i++){
-        int nx = x+dx[i];
-        int ny = y+dy[i];
-
-        // 범위를 벗어나면 무시하기
-        if(nx<0||ny<0||nx>N||ny>N) continue;
-
-        if (map[nx][ny] && !visited[nx][ny]){
-            Make_LandLabel(nx, ny, label);
-            label++;
-        }
-    }
-}
-
-
-int BFS(int label){
-    queue<coordinate> q; // 좌표를 저장하는 큐
-    
-    // 일단 인자로 들어온 섬의 좌표를 다 큐에 넣는다
+    // 섬에 번호를 붙여주는 작업
+    int label = 1;
     for (int i=0; i<N; i++){
-        for (int j=0;j<N;j++){
-            if (map[i][j]==label){
-                visited[i][j]=1; // 방문했음 체크
-                q.push({i, j});
+        for (int j=0; j<N; j++){
+            if (map[i][j]<0){
+                land_label(i, j, label++);
             }
         }
     }
 
-    int shortCut=0; // 최단 거리를 저장하는 변수
-    while (!q.empty()){
-        int s = q.size();
-        for (int i=0; i<s; i++){
-            // 큐의 맨 앞에 있는 좌표를 변수에 저장하고 큐에서 삭제
-            int x = q.front().x;
-            int y = q.front().y;
-            q.pop();
-            
-            // 4방향으로 탐색하기
-            for (int j=0; j<4; j++){
-                int nx = x + dx[j];
-                int ny = y + dy[j];
+}
 
-                // 범위를 벗어나면 무시하기
-                if(nx<0||ny<0||nx>N||ny>N) continue;
-                // 바다도 아니고, 현재 섬도 아니라면(==다른 섬에 도착했으면 shortCut 반환)
-                if (map[nx][ny]!=0 && map[nx][ny]!=label) return shortCut;
-                // 방문하지 않은 바다라면 큐에 넣어주기
-                else if (map[nx][ny]==0 && visited[nx][ny]==0){
-                    visited[nx][ny]=1; // 방문했음 체크
-                    q.push({nx, ny});
-                }
+
+void land_label(int y, int x, int label){
+    queue<coordinate> q;
+    q.push({y, x});
+    while (!q.empty()){
+        bool edge = false;
+
+        // 좌표를 변수에 저장
+        int y = q.front().y;
+        int x = q.front().x;
+        map[y][x]=label;
+        q.pop();
+
+        // 4방향으로 탐색
+        for (int i=0; i<4; i++){
+            int ny = y+dy[i];
+            int nx = x+dx[i];
+
+            // 이동할 좌표가 지도를 벗어나면 무시하기
+            if (nx<0 || ny<0 || nx>N || ny>N) continue;
+            // 아까 입력받을 때 섬들은 -1로 초기화 해줬음
+            // 다음에 밟을 땅이 섬이라면
+            if (map[ny][nx]<0){
+                map[ny][nx] = label;
+                q.push({ny,nx});
+            }
+            // 다음에 밟을 땅이 바다라면 지금 좌표는 바다와 육지의 경계 edge
+            else if (map[ny][nx]==0) edge=true;
+        }
+        if (edge) v.push_back({y, x});
+    }
+}
+
+// 섬의 모서리 -> 다른 섬의 모서리까지의 거리 중 최소값을 계산
+// 라벨링할 때 벡터에 모서리 좌표를 넣어준 것을 이용한다.
+void distance(){
+    int tmp=0;
+    // 왜 v.size()-1까지 반복하는 거지
+    for(int i=0; i<v.size()-1; i++){
+        int y=v[i].y;
+        int x=v[i].x;
+        // 여기는 왜 i+1부터 시작하고, v.size()까지 반복하는 거지
+        for (int j=i+1;j<v.size();j++){
+            int ny=v[j].y;
+            int nx=v[j].x;
+
+            // map[y][x]가 섬이고 && map[ny][nx]도 섬이면서 && 두 섬이 다른 섬일 경우
+            if (map[y][x]>0 && map[ny][nx]>0 && map[y][x]!=map[ny][nx]){
+                // 최단거리를 구하는 공식: (절대값)세로의 길이차 +(절대값)가로의 길이차 -1(겹치는 부분)
+                tmp = abs(y-ny)+abs(x-nx)-1;
+                // 계속 tmp 계산하면서 가장 작은 tmp값을 정답으로 저장
+                if(ans>tmp) ans = tmp;
             }
         }
-        shortCut++;
     }
 }
