@@ -24,26 +24,17 @@ int main(){
     // 셋째 줄에는 M(1 ≤ M ≤ 500,000)이 주어진다.
     int M;
     cin >> M;
+    vector <int> MCard;
     // 넷째 줄에는 상근이가 가지고 있는 숫자 카드인지 아닌지를 구해야 할 M개의 정수
-    for (int m=0; m<M; m++){
+    for (int i=0; i<M; i++){
         int tmp;
         cin >> tmp;
-
-        // 이진탐색으로 있는지 확인하기
-        int left=0, right=N-1;
-        bool searched=false;
-        while (left<=right){
-            // 인덱스의 절반 부분을 살펴보기
-            int mid=(left+right)/2;
-            if (card[mid]==tmp){
-                searched=true;
-                break;
-            }
-            else if (card[mid]<tmp) left=mid+1;
-            else right=mid-1;
-        }
-        // 탐색을 마쳤을 때 searched=1이면 1, 0이면 0출력
-        cout << searched << " ";
+        // upper_bound를 해주게 되면 이분탐색으로 해당 숫자가 끝나는 위치를 반환
+        // lower_bound는 이분탐색으로 해당 숫자가 시작되는 위치를 반환
+        auto upper = upper_bound(card.begin(), card.end(), tmp);
+        auto lower = lower_bound(card.begin(), card.end(), tmp);
+        
+        cout << upper-lower << " ";
     }
     return 0;
 }
