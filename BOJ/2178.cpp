@@ -1,74 +1,90 @@
-// (0, 0)ì—ì„œ ì¶œë°œí•˜ì—¬ (N-1, M-1)ì˜ ìœ„ì¹˜ë¡œ ì´ë™í•  ë•Œ ì§€ë‚˜ì•¼ í•˜ëŠ” ìµœì†Œì˜ ì¹¸ ìˆ˜ë¥¼ êµ¬í•˜ëŠ” í”„ë¡œê·¸ë¨
 #include <iostream>
-#include <queue>
+#include <vector>
+#include <utility>
 
 #define MAX 101
+
 using namespace std;
 
-struct coordinate{
-    int x, y;
-};
-
 int N, M;
-int map[MAX][MAX];
-// ìš°, í•˜, ì¢Œ, ìƒ
-// https://ldgeao99.tistory.com/400
-// (-1, -1) (-1, 0) (-1, 1)
-// (0, -1)   (0, 0)  (0, 1)
-// (1, -1)   (1, 0)  (1, 1)
-int dx[4] = { 1, 0, -1, 0 };
-int dy[4] = { 0, 1, 0 , -1 };
+int** map;
+bool** visited;
+int ans = 10001; // ÃÖ´ë 100*100 ¹è¿­ÀÌ´Ï±î ÃÖ´ë ÀÌµ¿ ¼ö´Â 10000ÀÌ µÈ´Ù.
 
+vector<pair<int, int>> dir;
 
-queue<coordinate> q; // ì¢Œí‘œë¥¼ ì €ì¥í•˜ëŠ” í
-
-
-void BFS(int x, int y);
-int main(){
-    // ì²«ì§¸ ì¤„ì— ë‘ ì •ìˆ˜ N, M(2 â‰¤ N, M â‰¤ 100)ì´ ì£¼ì–´ì§„ë‹¤.
+void DFS(int x, int y, int depth);
+void MakeDir();
+int main() {
+    // N¡¿MÅ©±âÀÇ ¹è¿­·Î Ç¥ÇöµÇ´Â ¹Ì·Î
+    // Ã¹Â° ÁÙ¿¡ µÎ Á¤¼ö N, M(2 ¡Â N, M ¡Â 100)ÀÌ ÁÖ¾îÁø´Ù.
+    // ´ÙÀ½ N°³ÀÇ ÁÙ¿¡´Â M°³ÀÇ Á¤¼ö·Î ¹Ì·Î°¡ ÁÖ¾îÁø´Ù. °¢°¢ÀÇ ¼öµéÀº ºÙ¾î¼­ ÀÔ·ÂÀ¸·Î ÁÖ¾îÁø´Ù.
     cin >> N >> M;
+    map = new int* [N];
+    visited = new bool* [N];
 
-    // ë‹¤ìŒ Nê°œì˜ ì¤„ì—ëŠ” Mê°œì˜ ì •ìˆ˜ë¡œ ë¯¸ë¡œê°€ ì£¼ì–´ì§„ë‹¤. ê°ê°ì˜ ìˆ˜ë“¤ì€ ë¶™ì–´ì„œ ì…ë ¥ìœ¼ë¡œ ì£¼ì–´ì§„ë‹¤.
-    // ì´ì°¨ì› ë°°ì—´
-        // arr[0][0] arr[0][1] arr[0][2]
-        // arr[1][0] arr[1][1] arr[1][2]
-    // map[N][M]
-    for (int i=0; i<N; i++){
-        string MString;
-        cin >> MString;
-        for(int j=0; j<M; j++){
-            map[i][j]= MString[j]-'0';
-        }
+    for (int i = 0; i < N; i++) {
+        map[i] = new int[M];
+        visited[i] = new bool[M];
     }
 
-    BFS(0, 0);
+    for (int i = 0; i < N; i++) {
+        string s;
+        cin >> s;
+        for (int j = 0; j < M; j++) {
+            map[i][j] = s[j]-'0'; // map ¹è¿­¿¡ ÀÔ·Â ¼ıÀÚ ³Ö±â
+            visited[i][j] = 0; // visited ¹è¿­ ÃÊ±âÈ­
+        }
+    }
+    MakeDir(); // »óÇÏÁÂ¿ì ÁÂÇ¥ º¤ÅÍ¿¡ ÀÔ·Â
 
-    // ì²«ì§¸ ì¤„ì— ì§€ë‚˜ì•¼ í•˜ëŠ” ìµœì†Œì˜ ì¹¸ ìˆ˜ë¥¼ ì¶œë ¥í•œë‹¤.
-    // í•­ìƒ ë„ì°©ìœ„ì¹˜ë¡œ ì´ë™í•  ìˆ˜ ìˆëŠ” ê²½ìš°ë§Œ ì…ë ¥ìœ¼ë¡œ ì£¼ì–´ì§„ë‹¤.
-    cout << map[N-1][M-1] << '\n';
+    
+    // ¹Ì·Î¿¡¼­ 1Àº ÀÌµ¿ÇÒ ¼ö ÀÖ´Â Ä­À» ³ªÅ¸³»°í, 0Àº ÀÌµ¿ÇÒ ¼ö ¾ø´Â Ä­À» ³ªÅ¸³½´Ù.
+    // ÀÌ·¯ÇÑ ¹Ì·Î°¡ ÁÖ¾îÁ³À» ¶§, (1, 1)¿¡¼­ Ãâ¹ßÇÏ¿© (N, M)ÀÇ À§Ä¡·Î ÀÌµ¿ÇÒ ¶§ Áö³ª¾ß ÇÏ´Â ÃÖ¼ÒÀÇ Ä­ ¼ö¸¦ ±¸ÇÏ´Â ÇÁ·Î±×·¥À» ÀÛ¼ºÇÏ½Ã¿À.
+    // ÇÑ Ä­¿¡¼­ ´Ù¸¥ Ä­À¸·Î ÀÌµ¿ÇÒ ¶§, ¼­·Î ÀÎÁ¢ÇÑ Ä­À¸·Î¸¸ ÀÌµ¿ÇÒ ¼ö ÀÖ´Ù.
+    DFS(0, 0, 1);
+
+    cout << ans << '\n';
+
     return 0;
 }
-void BFS(int x, int y){
-    q.push({x, y});
-    while (!q.empty()){
-        //visited[y][x] =1; // ë°©ë¬¸í–ˆìŒ ì²´í¬
 
-        int x = q.front().x;
-        int y = q.front().y;
-        q.pop(); // x, yì— ì €ì¥í•œ ì¢Œí‘œ ì œê±°
-
-        for (int i=0; i<4; i++){
-            int nx = x+dx[i];
-            int ny = y+dy[i];
-
-            // ì´ë™í•  ì¢Œí‘œê°€ ì§€ë„ë¥¼ ë²—ì–´ë‚˜ë©´ ë¬´ì‹œí•˜ê¸°
-            // map[N][M]
-            if(nx<0 || ny<0 || nx>N || ny>M) continue;
-            // ë‹¤ìŒ ì¢Œí‘œê°€ 1ì´ì–´ì•¼ ì´ë™í•  ìˆ˜ ìˆìŒ
-            if(map[nx][ny]==1){
-                map[nx][ny]=map[x][y]+1;
-                q.push({nx, ny});
-            }
+void DFS(int x, int y, int depth) {
+    // ¸ñÇ¥ÁöÁ¡(N, M)¿¡ µµÂøÇßÀ¸¸é min°ª °»½ÅÇÏ°í DFS³¡
+    // (0, 0)¿¡¼­ ½ÃÀÛÇÏ´Ï±î N-1, M-1ÀÌ (N, M)
+    if (x == N-1 && y == M-1) {
+        if (depth < ans) {
+            ans = depth;
+            //return;
         }
     }
+
+    //cout << x << " "<< y << '\n';
+    
+    
+    // 4¹æÇâ(=dir.size())À¸·Î Å½»öÇÏ¸é¼­ map[N][M]=1 && visited[N][M]=0 ÀÎ °÷ ¹æ¹®ÇÏ±â
+    for (int i = 0; i < dir.size(); i++) {
+        int nextN = x + dir[i].first;
+        int nextM = y + dir[i].second;
+        //cout << nextN << " " << nextM << '\n';
+        // 
+        // ¸Ê ¹ş¾î³ª¸é Å½»öx
+        if (nextN < 0 || nextN >= N || nextM < 0 || nextM >= M) continue;
+        
+        if (map[nextN][nextM]==1 && visited[nextN][nextM]==0) {
+            // cout << "h" << '\n';
+            // ¹æ¹®Ã¼Å©
+            visited[x][y] = 1;
+            DFS(nextN, nextM, depth + 1);
+            visited[x][y] = 0;
+        }
+    }
+    
+
+}
+void MakeDir() {
+    dir.push_back(make_pair(-1, 0)); // »ó
+    dir.push_back(make_pair(1, 0)); //  ÇÏ
+    dir.push_back(make_pair(0, -1)); // ÁÂ
+    dir.push_back(make_pair(0, 1)); // ¿ì
 }
