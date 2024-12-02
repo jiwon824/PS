@@ -15,11 +15,10 @@ bool isAnswer(){
     else return false;
 }
 
-void dfs(int curr_idx, int pick_size){
-    if(curr_idx>dwarf.size() || pick_size<0) return;
+void dfs(int curr_idx){
 
-    if(pick_size==7){
-        if(isAnswer()){
+    if(curr_idx+1>9 || picked.size()>=7){
+        if(picked.size()==7 && isAnswer()){
             for(auto e:picked){
                 cout << e << '\n';
             }
@@ -28,10 +27,10 @@ void dfs(int curr_idx, int pick_size){
     }
 
     picked.push_back(dwarf[curr_idx]);
-    dfs(curr_idx+1, pick_size+1);
+    dfs(curr_idx+1);
 
     picked.pop_back();
-    dfs(curr_idx+1, pick_size-1);
+    dfs(curr_idx+1);
 }
 
 int main(){
@@ -41,7 +40,7 @@ int main(){
     }
 
     // solution
-    dfs(0, 1);
+    dfs(0);
 
     return 0;
 }
