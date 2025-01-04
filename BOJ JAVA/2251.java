@@ -46,7 +46,7 @@ public class Main {
         Set<Integer> result = new TreeSet<>();
 
         int[] initialState = {0, 0, capacity[2]}; // 초기 상태
-        queue.add(new Bottle(initialState));
+        queue.offer(new Bottle(initialState));
         visited[0][0] = true;
 
         while (!queue.isEmpty()) {
@@ -68,7 +68,7 @@ public class Main {
 
                     if (!visited[nextA][nextB]) {
                         visited[nextA][nextB] = true;
-                        queue.add(next);
+                        queue.offer(next);
                     }
                 }
             }
